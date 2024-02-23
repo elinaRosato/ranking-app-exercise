@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Container, HStack, H1 } from '@northlight/ui'
 import { ExcelDropzone, ExcelRow } from './components/excel-dropzone'
-import RankingSection from './components/Ranking/ranking-section'
-import FormAddScore from './components/Form/form-add-score'
+import RankingSection from './components/ranking/ranking-section'
+import FormAddScore from './components/form/form-add-score'
 import importedScores from './data/scores';
 import importedUsers from './data/users';
 

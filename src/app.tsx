@@ -1,69 +1,84 @@
-import React, { ReactNode } from 'react'
-import { Link } from '@chakra-ui/react'
-import {
-  Container,
-  Box,
-  P,
-  VStack,
-  HStack,
-  H1,
-  H2,
-} from '@northlight/ui'
-import { palette } from '@northlight/tokens'
-import { ExcelDropzone, ExcelRow } from './excel-dropzone.jsx'
+import React, { useState, useEffect } from 'react'
+import { Container, HStack, H1 } from '@northlight/ui'
+import { ExcelDropzone, ExcelRow } from './components/excel-dropzone'
+import RankingSection from './components/Ranking/ranking-section'
+import FormAddScore from './components/Form/form-add-score'
+import importedScores from './data/scores';
+import importedUsers from './data/users';
 
-interface ExternalLinkProps {
-  href: string,
-  children: ReactNode,
+interface UsersProps {                                                      // Type to represent users
+    _id: number; 
+    name: string;
 }
 
-const ExternalLink = ({ href, children }: ExternalLinkProps) => <Link href={href} isExternal sx={ {color: palette.blue['500'], textDecoration: 'underline'} }>{ children }</Link>
-
-export default function App () {
-  function handleSheetData (data: ExcelRow[]) {
-    // replace this log with actual handling of the data
-    console.log(data)
-  }
-
-  return (
-    <Container maxW="6xl" padding="4">
-      <H1 marginBottom="4" >Mediatool exercise</H1>
-      <HStack spacing={10} align="flex-start">
-        <ExcelDropzone
-          onSheetDrop={ handleSheetData }
-          label="Import excel file here"
-        />
-        <VStack align="left">
-          <Box>
-            <H2>Initial site</H2>
-            <P>
-              Drop the excel file scores.xlsx that you will find
-              in this repo in the area to the left and watch the log output in the console.
-              We hope this is enough to get you started with the import.
-            </P>
-          </Box>
-          <Box>
-            <H2>Styling and Northlight</H2>
-            <P>
-              Styling is optional for this task and not a requirement. The styling for this app is using
-              our own library Northligth which in turn is based on Chakra UI. 
-              You <i>may</i> use it to give some style to the application but again, it is entierly optional.
-            </P>
-            <P>
-              Checkout <ExternalLink href="https://chakra-ui.com/">Chackra UI</ExternalLink> for
-              layout components such 
-              as <ExternalLink href="https://chakra-ui.com/docs/components/box">Box</ExternalLink>
-              , <ExternalLink href="https://chakra-ui.com/docs/components/stack">Stack</ExternalLink>
-              , <ExternalLink href="https://chakra-ui.com/docs/components/grid">Grid</ExternalLink>
-              , <ExternalLink href="https://chakra-ui.com/docs/components/flex">Flex</ExternalLink> and others.
-            </P>
-            <P>
-              Checkout <ExternalLink href="https://northlight.dev/">Northlight</ExternalLink> for
-              some of our components.
-            </P>
-          </Box>
-        </VStack>
-      </HStack>
-    </Container>
-  ) 
+interface ScoresProps {                                                     // Type to represent scores
+    userId: number; 
+    score: number;
 }
+
+interface UserScoresProps {                                                 // Type to represent a user along with their scores
+    user: UsersProps;
+    scores: number[];
+}
+
+    const App = () => {
+    const [users, setUsers] = useState<UsersProps[]>(importedUsers);          // State to hold imported users
+    const [scores, setScores] = useState<ScoresProps[]>(importedScores);      // State to hold imported scores
+    const [usersScores, setUsersScores] = useState<UserScoresProps[]>([]);    // State to hold users and their scores
+
+    useEffect(() => {                                                         // Use effect to combine scores with user data when users or scores change
+        const mappedScores = users
+            .map((user) => {
+                const userScores = scores
+                    .filter((score) => score.userId === user._id)               // Select only scores from speific user
+                    .map((score) => score.score)
+                    .sort((a, b) => b - a);                                     // Sort scores list in descending order
+                return {
+                user: user,
+                scores: userScores,
+                };
+            })
+            .sort((a, b) => b.scores[0] - a.scores[0]);                         // Sort mappedScores list in descending order based on each users' high score
+
+        setUsersScores(mappedScores);                                           // Update usersScores state
+    }, [users, scores]); 
+
+    const handleScoreSubmit = (name: string, score: number) => {              // Function to handle submitting a new score
+        setUsers((prevUsers) => {
+        const existingUser = prevUsers.find((user) => user.name === name);
+        if (existingUser) {                                                   // If user exists, add a new score
+            const newScore = { userId: existingUser._id, score: score };
+            setScores((prevScores) => [ ...prevScores, newScore ]);
+            return prevUsers;
+        } else {                                                              // If user doesn't exist, create a new user and add a new score
+            const userId = prevUsers.length + 1;
+            const newUser = { _id: userId, name: name };
+            const newScore = { userId: userId, score: score };
+            setScores((prevScores) => [ ...prevScores, newScore ]);
+            return [ ...prevUsers, newUser ]; 
+        }
+        });
+    }
+
+    function handleSheetData(data: ExcelRow[]) {                              // Function to handle data from an Excel sheet
+        data.forEach((row) => {
+        handleScoreSubmit(row.name, row.score);
+        });
+    };
+
+    return (
+        <Container maxW="full" padding="20" backgroundColor="gray.50">
+        <H1 marginBottom="16" textAlign="left" >Ranking App</H1>
+        <HStack spacing={10} align="flex-start">
+            <ExcelDropzone
+            onSheetDrop={ handleSheetData }
+            label="Import excel file here"
+            />
+            <FormAddScore  onScoreSubmit={handleScoreSubmit} />
+        </HStack>
+        <RankingSection usersScores={usersScores} />
+        </Container>
+    ) 
+}
+
+export default App

@@ -4,5 +4,9 @@ import { createRoot } from 'react-dom/client'
 import App from '../src/app'
 
 const container = document.getElementById('root')
-const root = createRoot(container)
-root.render(<MediatoolThemeProvider><App /></MediatoolThemeProvider>)
+if (container) {
+    const root = createRoot(container)
+    root.render(<MediatoolThemeProvider><App /></MediatoolThemeProvider>)
+  } else {
+    console.error("Root container not found");
+  }

@@ -46,21 +46,22 @@ interface UserScoresProps {                                                     
         setUsersScores(mappedScores);                                               // Update usersScores state
     }, [mappedScores]);                                          
 
-    const handleScoreSubmit = (name: string, score: number) => {                    // Function to handle submitting a new score
-        setUsers((prevUsers) => {
-        const existingUser = prevUsers.find((user) => user.name === name);
-        if (existingUser) {                                                         // If user exists, add a new score
-            const newScore = { userId: existingUser._id, score: score };
-            setScores((prevScores) => [ ...prevScores, newScore ]);
-            return prevUsers;
-        } else {                                                                    // If user doesn't exist, create a new user and add a new score
-            const userId = prevUsers.length + 1;
-            const newUser = { _id: userId, name: name };
-            const newScore = { userId: userId, score: score };
-            setScores((prevScores) => [ ...prevScores, newScore ]);
-            return [ ...prevUsers, newUser ]; 
+    const handleScoreSubmit = (name: string, score: number) => {                    // Function to handle submitting a new score        
+        if (!users.find((user) => user.name === name)) {                            // Check if the user already exists
+            setUsers((prevUsers) => {                                               // If user does not exist, create a new user
+                const userId = prevUsers.length + 1;
+                const newUser = { _id: userId, name: name };
+                return [ ...prevUsers, newUser ];
+            });
         }
-        });
+
+        const existingUser = users.find((user) => user.name === name);              // Find the user after the check        
+        if (existingUser) {                                                         // If the user exists, add a new score
+            setScores((prevScores) => {
+                const newScore = { userId: existingUser._id, score: score };
+                return [ ...prevScores, newScore ];
+            });
+        }
     }
 
     function handleSheetData(data: ExcelRow[]) {                                    // Function to handle data from an Excel sheet

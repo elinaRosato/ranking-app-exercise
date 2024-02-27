@@ -21,7 +21,7 @@ interface UserScoresProps {                                                     
     scores: number[];
 }
 
-    const App = () => {
+const App = () => {
     const [users, setUsers] = useState<UsersProps[]>(importedUsers);                        // State to hold imported users
     const [scores, setScores] = useState<ScoresProps[]>(importedScores);                    // State to hold imported scores
     const [usersScores, setUsersScores] = useState<UserScoresProps[]>([]);                  // State to hold users and their scores
